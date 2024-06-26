@@ -1,42 +1,52 @@
-import React, { useEffect, useState } from "react";
-import "./../styles/App.css";
-import axios from "axios";
+
+import React, { useState, useEffect } from 'react';
+import './../styles/App.css';
+
 
 const App = () => {
   const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [msg, setMsg] = useState("loading...");
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  function fetchData() {
-    setLoading(true);
-
-    axios
-      .get("https://dummyjson.com/products")
-      .then((response) => {
-        setData(JSON.stringify(response.data, null, 2));
-        setLoading(false);
-        setMsg("loading...");
-      })
-      .catch((err) => {
-        console.log(err);
-        setMsg("An error occurred: ");
-      });
-  }
   useEffect(() => {
+
+    const fetchData = async () => {
+      try {
+        const response = await fetch('https://dummyjson.com/products');
+        if (!response.ok) {
+          throw new Error('Failed to fetch data');
+        }
+        const jsonData = await response.json();
+        if (jsonData.length === 0) {
+          throw new Error('No data found');
+        }
+        setData(jsonData);
+        setIsLoading(false);
+      } catch (error) {
+        setError(error.message);
+        setIsLoading(false);
+      }
+    };
+
     fetchData();
-  }, []);
+    }, []);
+
   return (
     <div>
-      {loading ? (
-        <p>{msg}</p>
+      {isLoading ? (
+        <p>Loading...</p>
+      ) : error ? (
+        <p>Error: {error}</p>
+      ) : !data ? (
+        <p>No data found</p>
       ) : (
-        <div>
-          <h1>Data Fetched from API</h1>
-          <pre>{data}</pre>
-        </div>
+        <pre>{JSON.stringify(data, null, 2)}</pre>
       )}
     </div>
   );
 };
 
-export default App;
+
+
+
+export default App
